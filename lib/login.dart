@@ -70,16 +70,24 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
+      final emailRegex = RegExp(r"^[\w\.\-+%]+@[\w\.\-]+\.[a-zA-Z]{2,}$");
+      if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter a valid email address")),
+      );
+      return;
+      }
+
       await db.insertUser({'email': email, 'password': pass});
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Account created successfully! 🎉"),
-          backgroundColor: Colors.pinkAccent,
-        ),
+      const SnackBar(
+        content: Text("Account created successfully! 🎉"),
+        backgroundColor: Colors.pinkAccent,
+      ),
       );
       Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const BabyProfilePage()),
+      context,
+      MaterialPageRoute(builder: (_) => const BabyProfilePage()),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
