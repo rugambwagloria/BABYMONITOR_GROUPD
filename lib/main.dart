@@ -122,24 +122,40 @@
 // }
 
 import 'package:flutter/material.dart';
+import 'login.dart';
 import 'home_screen.dart';
+import 'baby_profile_page.dart';
+import 'database_helper.dart';
+import 'trends_page.dart';
 
-void main() {
-  runApp(const MyApp());
+void main()async {
+   WidgetsFlutterBinding.ensureInitialized();
+   runApp(const BabyMonitorApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class BabyMonitorApp extends StatelessWidget {
+  const BabyMonitorApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Temperature Sensor',
+      title: 'Baby Monitor',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.pink,
+        scaffoldBackgroundColor: Colors.pink.shade50,
+        useMaterial3: true,
       ),
-      home: const HomeScreen(),
-      debugShowCheckedModeBanner: false,
+      // 👶 Start at LoginPage
+      home: const LoginPage(),
+
+      // Optional named routes
+      routes: {
+        '/login': (_) => const LoginPage(),
+        '/home': (_) => const HomeScreen(),
+        '/profile': (_) => const BabyProfilePage(),
+        '/trends': (_) => TrendsPage(tempHistory: [], noiseHistory: []),
+      },
     );
   }
 }
