@@ -127,6 +127,7 @@ import 'home_screen.dart';
 import 'baby_profile_page.dart';
 import 'database_helper.dart';
 import 'trends_page.dart';
+import 'welcome.dart';
 
 void main()async {
    WidgetsFlutterBinding.ensureInitialized();
@@ -147,10 +148,12 @@ class BabyMonitorApp extends StatelessWidget {
         useMaterial3: true,
       ),
       // 👶 Start at LoginPage
-      home: const LoginPage(),
+      home: WelcomeScreen(),
+      //home: const LoginPage(),
 
       // Optional named routes
       routes: {
+        '/welcome': (_) => WelcomeScreen(),
         '/login': (_) => const LoginPage(),
         '/home': (_) => const HomeScreen(),
         '/profile': (_) => const BabyProfilePage(),
