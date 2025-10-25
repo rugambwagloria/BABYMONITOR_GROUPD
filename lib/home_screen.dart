@@ -39,7 +39,7 @@ class BabyMonitorService {
 
 /// The main mobile-friendly screen.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -338,16 +338,12 @@ class _MiniGraph extends CustomPainter {
 class _SettingsSheet extends StatefulWidget {
   final double min;
   final double max;
-  final double noise;
-  final bool muted;
-  final Function(double, double, double, bool) onSave;
-
-  const _SettingsSheet({
+  final bool alarmMuted;
+  const SettingsSheet({
+    super.key,
     required this.min,
     required this.max,
-    required this.noise,
-    required this.muted,
-    required this.onSave,
+    required this.alarmMuted,
   });
 
   @override
