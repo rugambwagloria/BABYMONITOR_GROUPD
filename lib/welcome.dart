@@ -1,27 +1,11 @@
 import 'package:flutter/material.dart';
 import 'permissions_screen.dart';
 
-void main() {
-  runApp(BabyMonitorApp());
-}
-
-class BabyMonitorApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: WelcomeScreen(),
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: const Color(0xFFE91E63),
-        scaffoldBackgroundColor: Colors.white,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE91E63)),
-        useMaterial3: true,
-      ),
-    );
-  }
-}
-
 class WelcomeScreen extends StatefulWidget {
+  final String? babyName; // optional name for personalization
+
+  const WelcomeScreen({super.key, this.babyName});
+
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
@@ -34,16 +18,13 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    _animation = Tween<double>(
-      begin: 0,
-      end: -15,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _animation = Tween<double>(begin: 0, end: -15)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -57,6 +38,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
+    final babyName = widget.babyName ?? "your little one";
+
     return Scaffold(
       body: Container(
         width: screenWidth,
@@ -66,9 +49,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFF8BBD0),
-              Color(0xFFF06292),
-              Color(0xFFD81B60),
+              Color(0xFFFFE0B2), // Creamy orange
+              Color(0xFFFFB74D), // Soft orange
+              Color(0xFF8D6E63), // Warm brown
             ],
           ),
         ),
@@ -81,16 +64,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Top Bar (menu only)
+                // Title Bar
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.menu,
-                      color: Colors.white,
-                      size: screenWidth * 0.08,
-                    ),
-                    SizedBox(width: screenWidth * 0.05),
+                    const Icon(Icons.favorite, color: Colors.white, size: 30),
+                    const SizedBox(width: 10),
                     Text(
                       'BABY MONITOR',
                       style: TextStyle(
@@ -102,21 +81,31 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     ),
                   ],
                 ),
-                SizedBox(height: screenHeight * 0.05),
+                SizedBox(height: screenHeight * 0.04),
 
-                // Audio Only Mode Card
-                _buildModeSection(
-                  title: 'Audio only mode',
-                  icon: Icons.mic,
-                  description:
-                      'Get SMS alerts (3 left)\nLeave this phone in baby\'s room and if noise is detected, get SMS on any other phone number',
-                  onPressed: () {},
-                  screenWidth: screenWidth,
+                // Greeting
+                Text(
+                  "Welcome, Parent of $babyName 👋",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.06,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "We’re here to help you keep your baby safe, happy, and cozy 💛",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: screenWidth * 0.04,
+                  ),
                 ),
 
-                SizedBox(height: screenHeight * 0.07),
+                SizedBox(height: screenHeight * 0.05),
 
-                // Animated Baby Image
+                // Bouncing Baby Animation
                 AnimatedBuilder(
                   animation: _animation,
                   builder: (context, child) {
@@ -126,9 +115,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     );
                   },
                   child: Container(
-                    width: screenWidth * 0.7,
-                    height: screenWidth * 0.7,
-                    decoration: BoxDecoration(
+                    width: screenWidth * 0.65,
+                    height: screenWidth * 0.65,
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -140,99 +129,92 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     ),
                     child: ClipOval(
                       child: Image.network(
-                        'https://clipart-library.com/clipart/6ir5jy9XT.htm',
+                        'https://cdn-icons-png.flaticon.com/512/3063/3063826.png',
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(
+                        errorBuilder: (context, error, stackTrace) => const Icon(
                           Icons.child_care,
                           color: Colors.white,
-                          size: screenWidth * 0.25,
+                          size: 100,
                         ),
                       ),
                     ),
                   ),
                 ),
+
+                SizedBox(height: screenHeight * 0.06),
+
+                // Info Card
+                Container(
+                  padding: EdgeInsets.all(screenWidth * 0.05),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        "Audio Only Mode 🎧",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Leave this phone in the baby’s room and get alerts if your baby cries or noise levels increase.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const PermissionsScreen(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFB74D),
+                          padding: EdgeInsets.symmetric(
+                            vertical: screenWidth * 0.035,
+                            horizontal: screenWidth * 0.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          elevation: 6,
+                        ),
+                        child: const Text(
+                          "Continue",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 SizedBox(height: screenHeight * 0.05),
+
+                // Footer
+                Text(
+                  "Because every giggle matters 💕",
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontStyle: FontStyle.italic,
+                    fontSize: 15,
+                  ),
+                ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildModeSection({
-    required String title,
-    required IconData icon,
-    required String description,
-    required VoidCallback onPressed,
-    required double screenWidth,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(screenWidth * 0.05),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: Colors.white, size: screenWidth * 0.1),
-              SizedBox(width: screenWidth * 0.04),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: screenWidth * 0.05,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: screenWidth * 0.035,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: screenWidth * 0.05),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => PermissionsScreen()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF48FB1), // lighter pink
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: screenWidth * 0.03,
-                horizontal: screenWidth * 0.15,
-              ),
-            ),
-            child: Text(
-              'Start',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: screenWidth * 0.045,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

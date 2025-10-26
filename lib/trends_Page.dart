@@ -6,10 +6,10 @@ class TrendsPage extends StatelessWidget {
   final List<double> noiseHistory;
 
   const TrendsPage({
-    Key? key,
+    super.key,
     required this.tempHistory,
     required this.noiseHistory,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,18 +22,16 @@ class TrendsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.pinkAccent,
         title: const Text("📊 Trends"),
         centerTitle: true,
       ),
-      backgroundColor: Colors.pink.shade50,
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             _buildTrendCard(
               title: "Temperature Trend",
-              color: Colors.pinkAccent,
+              color: Theme.of(context).primaryColor,
               values: tempHistory,
               avg: "${avgTemp.toStringAsFixed(1)} °C",
               icon: Icons.thermostat,
@@ -41,7 +39,7 @@ class TrendsPage extends StatelessWidget {
             const SizedBox(height: 16),
             _buildTrendCard(
               title: "Noise Trend",
-              color: Colors.deepPurpleAccent,
+              color: Theme.of(context).primaryColor,
               values: noiseHistory,
               avg: "${avgNoise.toStringAsFixed(1)} dB",
               icon: Icons.volume_up,
@@ -71,22 +69,16 @@ class TrendsPage extends StatelessWidget {
               children: [
                 Icon(icon, color: color),
                 const SizedBox(width: 8),
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const Spacer(),
-                Text("Avg: $avg",
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, color: Colors.black54)),
+                Text("Avg: $avg", style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black54)),
               ],
             ),
             const SizedBox(height: 12),
             SizedBox(
               height: 100,
               width: double.infinity,
-              child: CustomPaint(
-                painter: _TrendPainter(values, color),
-              ),
+              child: CustomPaint(painter: _TrendPainter(values, color)),
             ),
           ],
         ),
@@ -117,11 +109,13 @@ class _TrendPainter extends CustomPainter {
     for (int i = 0; i < values.length; i++) {
       final x = i * (size.width / (values.length - 1));
       final y = size.height - ((values[i] - minV) / range) * size.height;
-      if (i == 0) path.moveTo(x, y);
-      else path.lineTo(x, y);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
     }
 
-    // soft shadow
     final shadow = Paint()
       ..color = color.withOpacity(0.2)
       ..strokeWidth = 8
@@ -133,6 +127,5 @@ class _TrendPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _TrendPainter oldDelegate) =>
-      oldDelegate.values != values;
+  bool shouldRepaint(covariant _TrendPainter oldDelegate) => oldDelegate.values != values;
 }

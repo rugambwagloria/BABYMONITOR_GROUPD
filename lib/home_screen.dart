@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'trends_Page.dart'; // make sure this matches your file name
+import 'trends_page.dart';
+import 'database_helper.dart';
 
-/// Simulates both temperature and noise readings.
 class BabyMonitorService {
   final _tempController = StreamController<double>.broadcast();
   final _noiseController = StreamController<double>.broadcast();
@@ -16,7 +16,6 @@ class BabyMonitorService {
 
   void start() {
     stop();
-    // Simulate new readings every 2 seconds
     _simTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       final temp = 18 + _random.nextDouble() * 10; // 18–28 °C
       final noise = 30 + _random.nextDouble() * 50; // 30–80 dB
@@ -37,10 +36,8 @@ class BabyMonitorService {
   }
 }
 
-/// The main mobile-friendly screen.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -57,10 +54,13 @@ class _HomeScreenState extends State<HomeScreen>
   StreamSubscription<double>? _tempSub;
   StreamSubscription<double>? _noiseSub;
 
-  double _minComfort = 20;
-  double _maxComfort = 26;
-  double _noiseThreshold = 60; // dB threshold for too loud
+  final double _minComfort = 20;
+  final double _maxComfort = 26;
+  final double _noiseThreshold = 60;
   bool _alarmMuted = false;
+
+  String _babyName = "Baby";
+  String _parentName = "Parent";
 
   @override
   void initState() {
@@ -70,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
     _service.start();
+    _loadProfile();
 
     _tempSub = _service.temperatureStream.listen((t) {
       setState(() {
@@ -86,6 +87,23 @@ class _HomeScreenState extends State<HomeScreen>
         if (_noiseHistory.length > 50) _noiseHistory.removeAt(0);
       });
     });
+  }
+
+  Future<void> _loadProfile() async {
+    final profiles = await DatabaseHelper.instance.getBabyProfiles();
+    if (profiles.isNotEmpty) {
+      final p = profiles.first;
+      setState(() {
+        _babyName = p['name'] ?? 'Baby';
+      });
+    }
+    // parent name from user table (first user)
+    final users = await DatabaseHelper.instance.getUsersAll();
+    if (users.isNotEmpty) {
+      setState(() {
+        _parentName = users.first['email'] ?? 'Parent';
+      });
+    }
   }
 
   @override
@@ -121,11 +139,10 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     final tempStatus = _tempStatus();
     final noiseStatus = _noiseStatus();
-
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.pinkAccent,
-        title: const Text('👶 Baby Monitor'),
+        title: Text('Hi, $_parentName — monitoring $_babyName'),
         centerTitle: true,
         actions: [
           IconButton(
@@ -143,9 +160,18 @@ class _HomeScreenState extends State<HomeScreen>
               );
             },
           ),
+          IconButton(
+            tooltip: "Tips",
+            icon: const Icon(Icons.lightbulb),
+            onPressed: () => Navigator.pushNamed(context, '/tips'),
+          ),
+          IconButton(
+            tooltip: "Settings",
+            icon: const Icon(Icons.settings),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
+          ),
         ],
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -197,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             Row(
               children: [
-                Icon(icon, color: Colors.pinkAccent),
+                Icon(icon, color: Theme.of(context).primaryColor),
                 const SizedBox(width: 8),
                 Text(
                   title,
@@ -260,45 +286,26 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildSettingsCard(BuildContext context) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: const Icon(Icons.settings, color: Colors.pinkAccent),
-        title: const Text("Settings"),
-        subtitle: Text(
-          "Comfort: ${_minComfort.toStringAsFixed(1)}–${_maxComfort.toStringAsFixed(1)} °C\nNoise limit: $_noiseThreshold dB",
-        ),
-        trailing: Switch(
-          value: _alarmMuted,
-          onChanged: (v) => setState(() => _alarmMuted = v),
-        ),
-        onTap: () async {
-          await showModalBottomSheet(
-            context: context,
-            builder: (_) => _SettingsSheet(
-              min: _minComfort,
-              max: _maxComfort,
-              noise: _noiseThreshold,
-              muted: _alarmMuted,
-              onSave: (min, max, noise, muted) {
-                setState(() {
-                  _minComfort = min;
-                  _maxComfort = max;
-                  _noiseThreshold = noise;
-                  _alarmMuted = muted;
-                });
-              },
-            ),
-          );
-        },
+Widget _buildSettingsCard(BuildContext context) {
+  return Card(
+    elevation: 3,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    child: ListTile(
+      leading: Icon(Icons.settings, color: Theme.of(context).primaryColor),
+      title: const Text("Quick Settings"),
+      subtitle: Text(
+        "Comfort: ${_minComfort.toStringAsFixed(1)}–${_maxComfort.toStringAsFixed(1)} °C\nNoise limit: ${_noiseThreshold.toStringAsFixed(0)} dB",
       ),
-    );
-  }
+      trailing: Switch(
+        value: _alarmMuted,
+        onChanged: (v) => setState(() => _alarmMuted = v),
+      ),
+      onTap: () => Navigator.pushNamed(context, '/settings'),
+    ),
+  );
+}
 }
 
-/// Small graph painter
 class _MiniGraph extends CustomPainter {
   final List<double> values;
   final Color color;
@@ -321,10 +328,11 @@ class _MiniGraph extends CustomPainter {
     for (int i = 0; i < values.length; i++) {
       final x = i * (size.width / (values.length - 1));
       final y = size.height - ((values[i] - minV) / range) * size.height;
-      if (i == 0)
+      if (i == 0) {
         path.moveTo(x, y);
-      else
+      } else {
         path.lineTo(x, y);
+      }
     }
     canvas.drawPath(path, paint);
   }
@@ -332,100 +340,4 @@ class _MiniGraph extends CustomPainter {
   @override
   bool shouldRepaint(covariant _MiniGraph oldDelegate) =>
       oldDelegate.values != values;
-}
-
-/// Settings bottom sheet
-class _SettingsSheet extends StatefulWidget {
-  final double min;
-  final double max;
-  final bool alarmMuted;
-  const SettingsSheet({
-    super.key,
-    required this.min,
-    required this.max,
-    required this.alarmMuted,
-  });
-
-  @override
-  State<_SettingsSheet> createState() => _SettingsSheetState();
-}
-
-class _SettingsSheetState extends State<_SettingsSheet> {
-  late double _min;
-  late double _max;
-  late double _noise;
-  late bool _muted;
-
-  @override
-  void initState() {
-    super.initState();
-    _min = widget.min;
-    _max = widget.max;
-    _noise = widget.noise;
-    _muted = widget.muted;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        16,
-        16,
-        MediaQuery.of(context).viewInsets.bottom + 16,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            "Settings",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            "Temperature Comfort Range: ${_min.toStringAsFixed(1)}–${_max.toStringAsFixed(1)} °C",
-          ),
-          RangeSlider(
-            min: 10,
-            max: 35,
-            values: RangeValues(_min, _max),
-            onChanged: (v) => setState(() {
-              _min = v.start;
-              _max = v.end;
-            }),
-          ),
-          const SizedBox(height: 12),
-          Text("Noise Threshold: ${_noise.toStringAsFixed(0)} dB"),
-          Slider(
-            min: 40,
-            max: 90,
-            value: _noise,
-            divisions: 10,
-            onChanged: (v) => setState(() => _noise = v),
-          ),
-          SwitchListTile(
-            value: _muted,
-            onChanged: (v) => setState(() => _muted = v),
-            title: const Text("Mute Alarms"),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  widget.onSave(_min, _max, _noise, _muted);
-                  Navigator.pop(context);
-                },
-                child: const Text("Save"),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }
