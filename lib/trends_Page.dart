@@ -21,10 +21,7 @@ class TrendsPage extends StatelessWidget {
         : noiseHistory.reduce((a, b) => a + b) / noiseHistory.length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("📊 Trends"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("📊 Trends"), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -69,9 +66,21 @@ class TrendsPage extends StatelessWidget {
               children: [
                 Icon(icon, color: color),
                 const SizedBox(width: 8),
-                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const Spacer(),
-                Text("Avg: $avg", style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black54)),
+                Text(
+                  "Avg: $avg",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -127,5 +136,6 @@ class _TrendPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _TrendPainter oldDelegate) => oldDelegate.values != values;
+  bool shouldRepaint(covariant _TrendPainter oldDelegate) =>
+      oldDelegate.values != values;
 }

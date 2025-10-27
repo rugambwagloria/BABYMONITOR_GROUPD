@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'trends_page.dart';
 import 'database_helper.dart';
+import 'navigation.dart';
 
 class BabyMonitorService {
   final _tempController = StreamController<double>.broadcast();
@@ -16,7 +16,7 @@ class BabyMonitorService {
 
   void start() {
     stop();
-    _simTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+    _simTimer = Timer.periodic(const Duration(seconds: 2), (Timer timer) {
       final temp = 18 + _random.nextDouble() * 10; // 18–28 °C
       final noise = 30 + _random.nextDouble() * 50; // 30–80 dB
       _tempController.add(double.parse(temp.toStringAsFixed(1)));
@@ -61,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   String _babyName = "Baby";
   String _parentName = "Parent";
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -116,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   String _tempStatus() {
-    if (_temperature < _minComfort) return "❄️ Too Cold";
+    if (_temperature < _minComfort) return "❄ Too Cold";
     if (_temperature > _maxComfort) return "🔥 Too Hot";
     return "✅ Comfortable";
   }
@@ -145,21 +146,6 @@ class _HomeScreenState extends State<HomeScreen>
         title: Text('Hi, $_parentName — monitoring $_babyName'),
         centerTitle: true,
         actions: [
-          IconButton(
-            tooltip: "View Trends",
-            icon: const Icon(Icons.show_chart, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => TrendsPage(
-                    tempHistory: _tempHistory,
-                    noiseHistory: _noiseHistory,
-                  ),
-                ),
-              );
-            },
-          ),
           IconButton(
             tooltip: "Tips",
             icon: const Icon(Icons.lightbulb),
@@ -201,6 +187,18 @@ class _HomeScreenState extends State<HomeScreen>
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: AppNavigation(
+        currentIndex: _currentIndex,
+        onTab: (index) {
+          setState(() => _currentIndex = index);
+          if (index == 1) {
+            // Middle tab -> open Parents Tips page
+            Navigator.pushNamed(context, '/tips');
+          } else if (index == 2) {
+            Navigator.pushNamed(context, '/settings');
+          }
+        },
       ),
     );
   }
@@ -286,24 +284,24 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-Widget _buildSettingsCard(BuildContext context) {
-  return Card(
-    elevation: 3,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: ListTile(
-      leading: Icon(Icons.settings, color: Theme.of(context).primaryColor),
-      title: const Text("Quick Settings"),
-      subtitle: Text(
-        "Comfort: ${_minComfort.toStringAsFixed(1)}–${_maxComfort.toStringAsFixed(1)} °C\nNoise limit: ${_noiseThreshold.toStringAsFixed(0)} dB",
+  Widget _buildSettingsCard(BuildContext context) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        leading: Icon(Icons.settings, color: Theme.of(context).primaryColor),
+        title: const Text("Quick Settings"),
+        subtitle: Text(
+          "Comfort: ${_minComfort.toStringAsFixed(1)}–${_maxComfort.toStringAsFixed(1)} °C\nNoise limit: ${_noiseThreshold.toStringAsFixed(0)} dB",
+        ),
+        trailing: Switch(
+          value: _alarmMuted,
+          onChanged: (v) => setState(() => _alarmMuted = v),
+        ),
+        onTap: () => Navigator.pushNamed(context, '/settings'),
       ),
-      trailing: Switch(
-        value: _alarmMuted,
-        onChanged: (v) => setState(() => _alarmMuted = v),
-      ),
-      onTap: () => Navigator.pushNamed(context, '/settings'),
-    ),
-  );
-}
+    );
+  }
 }
 
 class _MiniGraph extends CustomPainter {
